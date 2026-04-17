@@ -5,7 +5,7 @@ scaffold: auth, i18n (French / Arabic RTL), data model, and CRUD for students,
 teachers, subjects, classrooms, and the weekly timetable. Financial modules
 (attendance-driven balances, invoices, dashboard) land in later phases.
 
-## Tech stack
+## Tech stackhhhh
 
 - **Next.js 16** (App Router) + **React 19** + TypeScript
 - **Tailwind CSS v4**
