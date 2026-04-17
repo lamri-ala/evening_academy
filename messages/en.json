@@ -1,0 +1,137 @@
+{
+  "common": {
+    "appName": "Evening Academy",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "loading": "Loading…",
+    "empty": "Nothing here yet.",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "actions": "Actions",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No",
+    "active": "Active",
+    "inactive": "Inactive",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "print": "Print"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "students": "Students",
+    "teachers": "Teachers",
+    "subjects": "Subjects",
+    "classrooms": "Classrooms",
+    "timetable": "Timetable",
+    "logout": "Sign out"
+  },
+  "auth": {
+    "login": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalidCredentials": "Invalid email or password.",
+    "signedInAs": "Signed in as {name}",
+    "welcomeTitle": "Evening Academy Management",
+    "welcomeSubtitle": "Sign in to continue"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}",
+    "phase1Note": "Phase 1: Setup, staff, and scheduling. Financial modules arrive in Phase 2.",
+    "students": "Students",
+    "teachers": "Teachers",
+    "subjects": "Subjects",
+    "classrooms": "Classrooms",
+    "timetableSlots": "Timetable slots"
+  },
+  "students": {
+    "title": "Students",
+    "new": "Add student",
+    "code": "Code",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "guardianName": "Guardian name",
+    "guardianPhone": "Guardian phone",
+    "notes": "Notes",
+    "balance": "Balance",
+    "profile": "Student profile"
+  },
+  "teachers": {
+    "title": "Teachers",
+    "new": "Add teacher",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "sessionRate": "Session rate",
+    "notes": "Notes",
+    "profile": "Teacher profile"
+  },
+  "subjects": {
+    "title": "Subjects",
+    "new": "Add subject",
+    "name": "Name",
+    "code": "Code",
+    "sessionPrice": "Session price",
+    "defaultTeacherRate": "Default teacher rate",
+    "color": "Color"
+  },
+  "classrooms": {
+    "title": "Classrooms",
+    "new": "Add classroom",
+    "name": "Name",
+    "capacity": "Capacity",
+    "notes": "Notes"
+  },
+  "timetable": {
+    "title": "Timetable",
+    "weeklyGrid": "Weekly schedule",
+    "new": "Add slot",
+    "edit": "Edit slot",
+    "day": "Day",
+    "start": "Start",
+    "end": "End",
+    "startTime": "Start",
+    "endTime": "End",
+    "subject": "Subject",
+    "teacher": "Teacher",
+    "classroom": "Classroom",
+    "label": "Label",
+    "conflictTeacher": "Conflict: this teacher is already booked at that time.",
+    "conflictClassroom": "Conflict: this classroom is already booked at that time.",
+    "print": "Print",
+    "printHeading": "Weekly timetable",
+    "days": {
+      "sun": "Sunday",
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday"
+    },
+    "daysShort": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
+  "errors": {
+    "required": "This field is required.",
+    "invalidEmail": "Invalid email address.",
+    "invalidTime": "Use HH:MM format.",
+    "endBeforeStart": "End must be after start.",
+    "invalidMoney": "Enter a valid amount.",
+    "duplicateCode": "Code already in use.",
+    "generic": "Something went wrong."
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "common": {
+    "appName": "Académie du Soir",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "loading": "Chargement…",
+    "empty": "Rien pour le moment.",
+    "createdAt": "Créé",
+    "updatedAt": "Mis à jour",
+    "actions": "Actions",
+    "search": "Rechercher",
+    "yes": "Oui",
+    "no": "Non",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ?",
+    "print": "Imprimer"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "students": "Élèves",
+    "teachers": "Enseignants",
+    "subjects": "Matières",
+    "classrooms": "Salles",
+    "timetable": "Emploi du temps",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "login": "Connexion",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "invalidCredentials": "E-mail ou mot de passe invalide.",
+    "signedInAs": "Connecté en tant que {name}",
+    "welcomeTitle": "Gestion de l'Académie du Soir",
+    "welcomeSubtitle": "Connectez-vous pour continuer"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue, {name}",
+    "phase1Note": "Phase 1 : Configuration, personnel et planification. Les modules financiers arriveront en phase 2.",
+    "students": "Élèves",
+    "teachers": "Enseignants",
+    "subjects": "Matières",
+    "classrooms": "Salles",
+    "timetableSlots": "Créneaux"
+  },
+  "students": {
+    "title": "Élèves",
+    "new": "Ajouter un élève",
+    "code": "Code",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "guardianName": "Nom du tuteur",
+    "guardianPhone": "Téléphone du tuteur",
+    "notes": "Notes",
+    "balance": "Solde",
+    "profile": "Fiche élève"
+  },
+  "teachers": {
+    "title": "Enseignants",
+    "new": "Ajouter un enseignant",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "sessionRate": "Tarif par séance",
+    "notes": "Notes",
+    "profile": "Fiche enseignant"
+  },
+  "subjects": {
+    "title": "Matières",
+    "new": "Ajouter une matière",
+    "name": "Nom",
+    "code": "Code",
+    "sessionPrice": "Prix par séance",
+    "defaultTeacherRate": "Tarif enseignant par défaut",
+    "color": "Couleur"
+  },
+  "classrooms": {
+    "title": "Salles",
+    "new": "Ajouter une salle",
+    "name": "Nom",
+    "capacity": "Capacité",
+    "notes": "Notes"
+  },
+  "timetable": {
+    "title": "Emploi du temps",
+    "weeklyGrid": "Planning de la semaine",
+    "new": "Ajouter un créneau",
+    "edit": "Modifier le créneau",
+    "day": "Jour",
+    "start": "Début",
+    "end": "Fin",
+    "startTime": "Début",
+    "endTime": "Fin",
+    "subject": "Matière",
+    "teacher": "Enseignant",
+    "classroom": "Salle",
+    "label": "Libellé",
+    "conflictTeacher": "Conflit : cet enseignant est déjà réservé à cette heure.",
+    "conflictClassroom": "Conflit : cette salle est déjà réservée à cette heure.",
+    "print": "Imprimer",
+    "printHeading": "Emploi du temps hebdomadaire",
+    "days": {
+      "sun": "Dimanche",
+      "mon": "Lundi",
+      "tue": "Mardi",
+      "wed": "Mercredi",
+      "thu": "Jeudi",
+      "fri": "Vendredi",
+      "sat": "Samedi"
+    },
+    "daysShort": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    }
+  },
+  "errors": {
+    "required": "Ce champ est requis.",
+    "invalidEmail": "Adresse e-mail invalide.",
+    "invalidTime": "Utilisez le format HH:MM.",
+    "endBeforeStart": "La fin doit être après le début.",
+    "invalidMoney": "Entrez un montant valide.",
+    "duplicateCode": "Code déjà utilisé.",
+    "generic": "Une erreur est survenue."
+  }
+}

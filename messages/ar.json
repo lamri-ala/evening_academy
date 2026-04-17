@@ -1,0 +1,137 @@
+{
+  "common": {
+    "appName": "أكاديمية المساء",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "back": "رجوع",
+    "loading": "جارٍ التحميل…",
+    "empty": "لا يوجد شيء هنا بعد.",
+    "createdAt": "أُنشئ في",
+    "updatedAt": "حُدّث في",
+    "actions": "إجراءات",
+    "search": "بحث",
+    "yes": "نعم",
+    "no": "لا",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "confirmDelete": "هل أنت متأكد من الحذف؟",
+    "print": "طباعة"
+  },
+  "nav": {
+    "dashboard": "لوحة القيادة",
+    "students": "الطلاب",
+    "teachers": "الأساتذة",
+    "subjects": "المواد",
+    "classrooms": "القاعات",
+    "timetable": "الجدول الأسبوعي",
+    "logout": "تسجيل الخروج"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "submit": "دخول",
+    "invalidCredentials": "بريد إلكتروني أو كلمة مرور غير صحيحة.",
+    "signedInAs": "مسجّل باسم {name}",
+    "welcomeTitle": "إدارة أكاديمية المساء",
+    "welcomeSubtitle": "سجّل الدخول للمتابعة"
+  },
+  "dashboard": {
+    "title": "لوحة القيادة",
+    "welcome": "مرحبًا، {name}",
+    "phase1Note": "المرحلة 1: الإعداد، الموظفون والجدولة. ستصل الوحدات المالية في المرحلة 2.",
+    "students": "الطلاب",
+    "teachers": "الأساتذة",
+    "subjects": "المواد",
+    "classrooms": "القاعات",
+    "timetableSlots": "الحصص"
+  },
+  "students": {
+    "title": "الطلاب",
+    "new": "إضافة طالب",
+    "code": "رمز",
+    "firstName": "الاسم",
+    "lastName": "اللقب",
+    "phone": "الهاتف",
+    "guardianName": "اسم ولي الأمر",
+    "guardianPhone": "هاتف ولي الأمر",
+    "notes": "ملاحظات",
+    "balance": "الرصيد",
+    "profile": "بطاقة الطالب"
+  },
+  "teachers": {
+    "title": "الأساتذة",
+    "new": "إضافة أستاذ",
+    "firstName": "الاسم",
+    "lastName": "اللقب",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني",
+    "sessionRate": "أجر الحصة",
+    "notes": "ملاحظات",
+    "profile": "بطاقة الأستاذ"
+  },
+  "subjects": {
+    "title": "المواد",
+    "new": "إضافة مادة",
+    "name": "الاسم",
+    "code": "رمز",
+    "sessionPrice": "ثمن الحصة",
+    "defaultTeacherRate": "أجر الأستاذ الافتراضي",
+    "color": "اللون"
+  },
+  "classrooms": {
+    "title": "القاعات",
+    "new": "إضافة قاعة",
+    "name": "الاسم",
+    "capacity": "السعة",
+    "notes": "ملاحظات"
+  },
+  "timetable": {
+    "title": "الجدول الأسبوعي",
+    "weeklyGrid": "الجدول الأسبوعي",
+    "new": "إضافة حصة",
+    "edit": "تعديل الحصة",
+    "day": "اليوم",
+    "start": "البداية",
+    "end": "النهاية",
+    "startTime": "البداية",
+    "endTime": "النهاية",
+    "subject": "المادة",
+    "teacher": "الأستاذ",
+    "classroom": "القاعة",
+    "label": "العنوان",
+    "conflictTeacher": "تعارض: الأستاذ محجوز في هذا الوقت.",
+    "conflictClassroom": "تعارض: القاعة محجوزة في هذا الوقت.",
+    "print": "طباعة",
+    "printHeading": "الجدول الأسبوعي",
+    "days": {
+      "sun": "الأحد",
+      "mon": "الإثنين",
+      "tue": "الثلاثاء",
+      "wed": "الأربعاء",
+      "thu": "الخميس",
+      "fri": "الجمعة",
+      "sat": "السبت"
+    },
+    "daysShort": {
+      "sun": "أحد",
+      "mon": "إثن",
+      "tue": "ثلا",
+      "wed": "أرب",
+      "thu": "خمي",
+      "fri": "جمع",
+      "sat": "سبت"
+    }
+  },
+  "errors": {
+    "required": "هذا الحقل مطلوب.",
+    "invalidEmail": "بريد إلكتروني غير صالح.",
+    "invalidTime": "استخدم صيغة HH:MM.",
+    "endBeforeStart": "يجب أن تكون النهاية بعد البداية.",
+    "invalidMoney": "أدخل مبلغًا صالحًا.",
+    "duplicateCode": "الرمز مستخدم بالفعل.",
+    "generic": "حدث خطأ ما."
+  }
+}
