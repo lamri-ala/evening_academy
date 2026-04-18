@@ -1,6 +1,6 @@
 # Eveninghf Academy Management Systemssss
 
-Local-first management app for a private evening tutoring academy. Phase 1
+Local-first management app for a private evening tutoring academy. HhPhase 1
 scaffold: auth, i18n (French / Arabic RTL), data model, and CRUD for students,
 teachers, subjects, classrooms, and the weekly timetable. Financial modules
 (attendance-driven balances, invoices, dashboard) land in later phases.
