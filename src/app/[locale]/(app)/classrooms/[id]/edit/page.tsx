@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { ClassroomForm } from "../../classroom-form";
 import { updateClassroom, deleteClassroom } from "../../actions";
@@ -13,7 +13,11 @@ export default async function EditClassroomPage({
 }) {
   const { locale, id } = await params;
   const tCommon = await getTranslations({ locale, namespace: "common" });
-  const classroom = await prisma.classroom.findUnique({ where: { id } });
+  const classroom = await db
+    .selectFrom("Classroom")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!classroom) notFound();
 
   // Bind deleteClassroom to this id for the form-less button. Avoids unused imports.
@@ -42,7 +46,7 @@ export default async function EditClassroomPage({
           name: classroom.name,
           capacity: classroom.capacity,
           notes: classroom.notes,
-          active: classroom.active,
+          active: toBool(classroom.active),
         }}
       />
     </>

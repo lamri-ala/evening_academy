@@ -1,9 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db, nowIso } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { redirectLocalized } from "@/lib/action-helpers";
 import { parseHHMM, rangesOverlap } from "@/lib/time";
@@ -51,17 +52,19 @@ async function detectConflict(params: {
   classroomId: string;
   excludeId?: string;
 }): Promise<"teacher" | "classroom" | null> {
-  const candidates = await prisma.timetableSlot.findMany({
-    where: {
-      active: true,
-      dayOfWeek: params.dayOfWeek,
-      OR: [
-        { teacherId: params.teacherId },
-        { classroomId: params.classroomId },
-      ],
-      ...(params.excludeId ? { NOT: { id: params.excludeId } } : {}),
-    },
-  });
+  let q = db
+    .selectFrom("TimetableSlot")
+    .select(["id", "startMinute", "endMinute", "teacherId", "classroomId"])
+    .where("active", "=", 1)
+    .where("dayOfWeek", "=", params.dayOfWeek)
+    .where((eb) =>
+      eb.or([
+        eb("teacherId", "=", params.teacherId),
+        eb("classroomId", "=", params.classroomId),
+      ]),
+    );
+  if (params.excludeId) q = q.where("id", "!=", params.excludeId);
+  const candidates = await q.execute();
   for (const c of candidates) {
     if (
       rangesOverlap(
@@ -88,8 +91,11 @@ export async function createTimetableSlot(
   const conflict = await detectConflict(parsed.data);
   if (conflict) return { error: `conflict:${conflict}` };
 
-  const created = await prisma.timetableSlot.create({
-    data: {
+  const id = randomUUID();
+  await db
+    .insertInto("TimetableSlot")
+    .values({
+      id,
       dayOfWeek: parsed.data.dayOfWeek,
       startMinute: parsed.data.startMinute,
       endMinute: parsed.data.endMinute,
@@ -97,13 +103,18 @@ export async function createTimetableSlot(
       teacherId: parsed.data.teacherId,
       classroomId: parsed.data.classroomId,
       label: parsed.data.label,
-    },
-  });
+    })
+    .execute();
+  const created = await db
+    .selectFrom("TimetableSlot")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
   await recordAudit({
     actorId: session.user.id,
     action: "timetable.create",
     entity: "TimetableSlot",
-    entityId: created.id,
+    entityId: id,
     payload: { after: created },
   });
   revalidatePath("/timetable");
@@ -118,14 +129,18 @@ export async function updateTimetableSlot(
   const session = await requireSession();
   const parsed = schema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
-  const before = await prisma.timetableSlot.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("TimetableSlot")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return { error: "notfound" };
   const conflict = await detectConflict({ ...parsed.data, excludeId: id });
   if (conflict) return { error: `conflict:${conflict}` };
 
-  const updated = await prisma.timetableSlot.update({
-    where: { id },
-    data: {
+  await db
+    .updateTable("TimetableSlot")
+    .set({
       dayOfWeek: parsed.data.dayOfWeek,
       startMinute: parsed.data.startMinute,
       endMinute: parsed.data.endMinute,
@@ -133,8 +148,15 @@ export async function updateTimetableSlot(
       teacherId: parsed.data.teacherId,
       classroomId: parsed.data.classroomId,
       label: parsed.data.label,
-    },
-  });
+      updatedAt: nowIso(),
+    })
+    .where("id", "=", id)
+    .execute();
+  const updated = await db
+    .selectFrom("TimetableSlot")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
   await recordAudit({
     actorId: session.user.id,
     action: "timetable.update",
@@ -148,9 +170,13 @@ export async function updateTimetableSlot(
 
 export async function deleteTimetableSlot(id: string): Promise<void> {
   const session = await requireSession();
-  const before = await prisma.timetableSlot.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("TimetableSlot")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return;
-  await prisma.timetableSlot.delete({ where: { id } });
+  await db.deleteFrom("TimetableSlot").where("id", "=", id).execute();
   await recordAudit({
     actorId: session.user.id,
     action: "timetable.delete",

@@ -1,9 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db, nowIso, toBool, toInt } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { redirectLocalized } from "@/lib/action-helpers";
 import { parseMoney } from "@/lib/money";
@@ -47,22 +48,30 @@ export async function createTeacher(
   const session = await requireSession();
   const parsed = baseSchema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
-  const created = await prisma.teacher.create({
-    data: {
+  const id = randomUUID();
+  await db
+    .insertInto("Teacher")
+    .values({
+      id,
       firstName: parsed.data.firstName,
       lastName: parsed.data.lastName,
       phone: parsed.data.phone,
       email: parsed.data.email,
       notes: parsed.data.notes,
       sessionRate: parsed.data.sessionRate,
-      active: parsed.data.active ?? true,
-    },
-  });
+      active: toInt(parsed.data.active ?? true),
+    })
+    .execute();
+  const created = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
   await recordAudit({
     actorId: session.user.id,
     action: "teacher.create",
     entity: "Teacher",
-    entityId: created.id,
+    entityId: id,
     payload: { after: created },
   });
   revalidatePath("/teachers");
@@ -77,20 +86,31 @@ export async function updateTeacher(
   const session = await requireSession();
   const parsed = baseSchema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
-  const before = await prisma.teacher.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return { error: "notfound" };
-  const updated = await prisma.teacher.update({
-    where: { id },
-    data: {
+  await db
+    .updateTable("Teacher")
+    .set({
       firstName: parsed.data.firstName,
       lastName: parsed.data.lastName,
       phone: parsed.data.phone,
       email: parsed.data.email,
       notes: parsed.data.notes,
       sessionRate: parsed.data.sessionRate,
-      active: parsed.data.active ?? before.active,
-    },
-  });
+      active: toInt(parsed.data.active ?? toBool(before.active)),
+      updatedAt: nowIso(),
+    })
+    .where("id", "=", id)
+    .execute();
+  const updated = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
   await recordAudit({
     actorId: session.user.id,
     action: "teacher.update",
@@ -105,9 +125,17 @@ export async function updateTeacher(
 
 export async function deleteTeacher(id: string): Promise<void> {
   const session = await requireSession();
-  const before = await prisma.teacher.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return;
-  await prisma.teacher.update({ where: { id }, data: { active: false } });
+  await db
+    .updateTable("Teacher")
+    .set({ active: 0, updatedAt: nowIso() })
+    .where("id", "=", id)
+    .execute();
   await recordAudit({
     actorId: session.user.id,
     action: "teacher.deactivate",

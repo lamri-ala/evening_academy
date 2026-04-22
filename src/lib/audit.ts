@@ -1,4 +1,5 @@
-import { prisma } from "./db";
+import { randomUUID } from "node:crypto";
+import { db } from "./db";
 
 type AuditInput = {
   actorId: string;
@@ -9,14 +10,16 @@ type AuditInput = {
 };
 
 export async function recordAudit(input: AuditInput): Promise<void> {
-  await prisma.auditLog.create({
-    data: {
+  await db
+    .insertInto("AuditLog")
+    .values({
+      id: randomUUID(),
       actorId: input.actorId,
       action: input.action,
       entity: input.entity,
       entityId: input.entityId,
       payload:
         input.payload === undefined ? null : JSON.stringify(input.payload),
-    },
-  });
+    })
+    .execute();
 }

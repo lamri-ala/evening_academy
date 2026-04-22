@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Pencil } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,11 @@ export default async function SubjectProfilePage({
   const t = await getTranslations({ locale, namespace: "subjects" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const subject = await prisma.subject.findUnique({ where: { id } });
+  const subject = await db
+    .selectFrom("Subject")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!subject) notFound();
 
   const moneyLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
@@ -46,7 +50,7 @@ export default async function SubjectProfilePage({
         {subject.color ?? "—"}
       </span>,
     ],
-    [tCommon("active"), subject.active ? tCommon("yes") : tCommon("no")],
+    [tCommon("active"), toBool(subject.active) ? tCommon("yes") : tCommon("no")],
   ];
 
   return (

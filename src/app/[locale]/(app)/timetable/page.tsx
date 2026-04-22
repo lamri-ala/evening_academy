@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Plus, Pencil } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -17,11 +17,27 @@ export default async function TimetablePage({
   const tDays = await getTranslations({ locale, namespace: "timetable.days" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const slots = await prisma.timetableSlot.findMany({
-    where: { active: true },
-    include: { subject: true, teacher: true, classroom: true },
-    orderBy: [{ dayOfWeek: "asc" }, { startMinute: "asc" }],
-  });
+  const slots = await db
+    .selectFrom("TimetableSlot")
+    .innerJoin("Subject", "Subject.id", "TimetableSlot.subjectId")
+    .innerJoin("Teacher", "Teacher.id", "TimetableSlot.teacherId")
+    .innerJoin("Classroom", "Classroom.id", "TimetableSlot.classroomId")
+    .select([
+      "TimetableSlot.id",
+      "TimetableSlot.dayOfWeek",
+      "TimetableSlot.startMinute",
+      "TimetableSlot.endMinute",
+      "TimetableSlot.label",
+      "Subject.name as subjectName",
+      "Subject.color as subjectColor",
+      "Teacher.firstName as teacherFirstName",
+      "Teacher.lastName as teacherLastName",
+      "Classroom.name as classroomName",
+    ])
+    .where("TimetableSlot.active", "=", 1)
+    .orderBy("TimetableSlot.dayOfWeek", "asc")
+    .orderBy("TimetableSlot.startMinute", "asc")
+    .execute();
 
   // Group by day
   const byDay = new Map<number, typeof slots>();
@@ -82,10 +98,10 @@ export default async function TimetablePage({
                               aria-hidden
                               className="inline-block h-2.5 w-2.5 rounded-sm"
                               style={{
-                                backgroundColor: s.subject.color ?? "#94a3b8",
+                                backgroundColor: s.subjectColor ?? "#94a3b8",
                               }}
                             />
-                            <span className="font-medium">{s.subject.name}</span>
+                            <span className="font-medium">{s.subjectName}</span>
                             {s.label ? (
                               <span className="text-xs text-muted-foreground">
                                 · {s.label}
@@ -96,8 +112,8 @@ export default async function TimetablePage({
                             {formatHHMM(s.startMinute)} – {formatHHMM(s.endMinute)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {s.teacher.firstName} {s.teacher.lastName} ·{" "}
-                            {s.classroom.name}
+                            {s.teacherFirstName} {s.teacherLastName} ·{" "}
+                            {s.classroomName}
                           </div>
                         </div>
                         <Link

@@ -1,10 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db, isUniqueConstraintError, nowIso, toBool, toInt } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { redirectLocalized } from "@/lib/action-helpers";
 
@@ -41,28 +41,34 @@ export async function createClassroom(
   const session = await requireSession();
   const parsed = schema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
+  const id = randomUUID();
   try {
-    const created = await prisma.classroom.create({
-      data: {
+    await db
+      .insertInto("Classroom")
+      .values({
+        id,
         name: parsed.data.name,
         capacity: parsed.data.capacity,
         notes: parsed.data.notes,
-        active: parsed.data.active ?? true,
-      },
-    });
-    await recordAudit({
-      actorId: session.user.id,
-      action: "classroom.create",
-      entity: "Classroom",
-      entityId: created.id,
-      payload: { after: created },
-    });
+        active: toInt(parsed.data.active ?? true),
+      })
+      .execute();
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "duplicate" };
-    }
+    if (isUniqueConstraintError(e)) return { error: "duplicate" };
     throw e;
   }
+  const created = await db
+    .selectFrom("Classroom")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
+  await recordAudit({
+    actorId: session.user.id,
+    action: "classroom.create",
+    entity: "Classroom",
+    entityId: id,
+    payload: { after: created },
+  });
   revalidatePath("/classrooms");
   return redirectLocalized("/classrooms");
 }
@@ -75,40 +81,57 @@ export async function updateClassroom(
   const session = await requireSession();
   const parsed = schema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
-  const before = await prisma.classroom.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Classroom")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return { error: "notfound" };
   try {
-    const updated = await prisma.classroom.update({
-      where: { id },
-      data: {
+    await db
+      .updateTable("Classroom")
+      .set({
         name: parsed.data.name,
         capacity: parsed.data.capacity,
         notes: parsed.data.notes,
-        active: parsed.data.active ?? before.active,
-      },
-    });
-    await recordAudit({
-      actorId: session.user.id,
-      action: "classroom.update",
-      entity: "Classroom",
-      entityId: id,
-      payload: { before, after: updated },
-    });
+        active: toInt(parsed.data.active ?? toBool(before.active)),
+        updatedAt: nowIso(),
+      })
+      .where("id", "=", id)
+      .execute();
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "duplicate" };
-    }
+    if (isUniqueConstraintError(e)) return { error: "duplicate" };
     throw e;
   }
+  const updated = await db
+    .selectFrom("Classroom")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
+  await recordAudit({
+    actorId: session.user.id,
+    action: "classroom.update",
+    entity: "Classroom",
+    entityId: id,
+    payload: { before, after: updated },
+  });
   revalidatePath("/classrooms");
   return redirectLocalized("/classrooms");
 }
 
 export async function deleteClassroom(id: string): Promise<void> {
   const session = await requireSession();
-  const before = await prisma.classroom.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Classroom")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return;
-  await prisma.classroom.update({ where: { id }, data: { active: false } });
+  await db
+    .updateTable("Classroom")
+    .set({ active: 0, updatedAt: nowIso() })
+    .where("id", "=", id)
+    .execute();
   await recordAudit({
     actorId: session.user.id,
     action: "classroom.deactivate",

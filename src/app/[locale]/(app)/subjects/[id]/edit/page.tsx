@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { SubjectForm } from "../../subject-form";
 import { updateSubject } from "../../actions";
@@ -12,7 +12,11 @@ export default async function EditSubjectPage({
 }) {
   const { locale, id } = await params;
   const tCommon = await getTranslations({ locale, namespace: "common" });
-  const subject = await prisma.subject.findUnique({ where: { id } });
+  const subject = await db
+    .selectFrom("Subject")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!subject) notFound();
 
   const action = updateSubject.bind(null, id);
@@ -29,7 +33,7 @@ export default async function EditSubjectPage({
           sessionPrice: subject.sessionPrice,
           defaultTeacherRate: subject.defaultTeacherRate,
           color: subject.color,
-          active: subject.active,
+          active: toBool(subject.active),
         }}
       />
     </>

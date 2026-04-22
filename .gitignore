@@ -40,8 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Prisma / SQLite local DB
+# SQLite local DB (better-sqlite3 + Kysely)
 dev.db
 dev.db-journal
-/prisma/dev.db
-/prisma/dev.db-journal
+dev.db-wal
+dev.db-shm

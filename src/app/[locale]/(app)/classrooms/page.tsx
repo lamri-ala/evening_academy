@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Plus } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -15,9 +15,12 @@ export default async function ClassroomsPage({
   const t = await getTranslations({ locale, namespace: "classrooms" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const classrooms = await prisma.classroom.findMany({
-    orderBy: [{ active: "desc" }, { name: "asc" }],
-  });
+  const classrooms = await db
+    .selectFrom("Classroom")
+    .selectAll()
+    .orderBy("active", "desc")
+    .orderBy("name", "asc")
+    .execute();
 
   return (
     <>
@@ -48,7 +51,7 @@ export default async function ClassroomsPage({
               <TR key={c.id}>
                 <TD>{c.name}</TD>
                 <TD>{c.capacity ?? "—"}</TD>
-                <TD>{c.active ? tCommon("yes") : tCommon("no")}</TD>
+                <TD>{toBool(c.active) ? tCommon("yes") : tCommon("no")}</TD>
                 <TD>
                   <Link
                     href={`/classrooms/${c.id}/edit`}
