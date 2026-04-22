@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { StudentForm } from "../../student-form";
 import { updateStudent } from "../../actions";
@@ -13,7 +13,11 @@ export default async function EditStudentPage({
   const { locale, id } = await params;
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const student = await prisma.student.findUnique({ where: { id } });
+  const student = await db
+    .selectFrom("Student")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!student) notFound();
 
   const action = updateStudent.bind(null, id);
@@ -32,7 +36,7 @@ export default async function EditStudentPage({
           guardianName: student.guardianName,
           guardianPhone: student.guardianPhone,
           notes: student.notes,
-          active: student.active,
+          active: toBool(student.active),
         }}
       />
     </>

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { SlotForm } from "../slot-form";
 import { createTimetableSlot } from "../actions";
@@ -14,18 +14,25 @@ export default async function NewSlotPage({
   const t = await getTranslations({ locale, namespace: "timetable" });
 
   const [subjects, teachers, classrooms] = await Promise.all([
-    prisma.subject.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-    }),
-    prisma.teacher.findMany({
-      where: { active: true },
-      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-    }),
-    prisma.classroom.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-    }),
+    db
+      .selectFrom("Subject")
+      .select(["id", "name"])
+      .where("active", "=", 1)
+      .orderBy("name", "asc")
+      .execute(),
+    db
+      .selectFrom("Teacher")
+      .select(["id", "firstName", "lastName"])
+      .where("active", "=", 1)
+      .orderBy("lastName", "asc")
+      .orderBy("firstName", "asc")
+      .execute(),
+    db
+      .selectFrom("Classroom")
+      .select(["id", "name"])
+      .where("active", "=", 1)
+      .orderBy("name", "asc")
+      .execute(),
   ]);
 
   if (subjects.length === 0 || teachers.length === 0 || classrooms.length === 0) {

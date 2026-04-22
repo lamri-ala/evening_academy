@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { PageHeader } from "@/components/ui/page-header";
 import { TeacherForm } from "../../teacher-form";
 import { updateTeacher } from "../../actions";
@@ -12,7 +12,11 @@ export default async function EditTeacherPage({
 }) {
   const { locale, id } = await params;
   const tCommon = await getTranslations({ locale, namespace: "common" });
-  const teacher = await prisma.teacher.findUnique({ where: { id } });
+  const teacher = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!teacher) notFound();
 
   const action = updateTeacher.bind(null, id);
@@ -30,7 +34,7 @@ export default async function EditTeacherPage({
           email: teacher.email,
           notes: teacher.notes,
           sessionRate: teacher.sessionRate,
-          active: teacher.active,
+          active: toBool(teacher.active),
         }}
       />
     </>

@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Plus } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -16,9 +16,13 @@ export default async function TeachersPage({
   const t = await getTranslations({ locale, namespace: "teachers" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const teachers = await prisma.teacher.findMany({
-    orderBy: [{ active: "desc" }, { lastName: "asc" }, { firstName: "asc" }],
-  });
+  const teachers = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .orderBy("active", "desc")
+    .orderBy("lastName", "asc")
+    .orderBy("firstName", "asc")
+    .execute();
 
   const moneyLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
 
@@ -61,7 +65,7 @@ export default async function TeachersPage({
                 <TD>{tr.firstName}</TD>
                 <TD>{tr.phone ?? "—"}</TD>
                 <TD>{formatCurrency(tr.sessionRate, moneyLocale)}</TD>
-                <TD>{tr.active ? tCommon("yes") : tCommon("no")}</TD>
+                <TD>{toBool(tr.active) ? tCommon("yes") : tCommon("no")}</TD>
               </TR>
             ))}
           </TBody>

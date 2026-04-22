@@ -1,4 +1,4 @@
-# Eveninghf Academy Management Systemssss
+# Evening Academy Management System
 
 Local-first management app for a private evening tutoring academy. Phase 1
 scaffold: auth, i18n (French / Arabic RTL), data model, and CRUD for students,
@@ -9,7 +9,8 @@ teachers, subjects, classrooms, and the weekly timetable. Financial modules
 
 - **Next.js 16** (App Router) + **React 19** + TypeScript
 - **Tailwind CSS v4**
-- **Prisma** ORM on **SQLite** (file-based, `dev.db`)
+- **SQLite** via **better-sqlite3** + **Kysely** (typed query builder,
+  file-based DB at `dev.db`, forward-only SQL migrations in `db/migrations/`)
 - **NextAuth v5** (Credentials + bcrypt, JWT sessions, roles: `DIRECTOR` / `STAFF`)
 - **next-intl** — locales: `fr` (default), `ar` (RTL), `en`
 - **zod** for validation, **lucide-react** icons, **class-variance-authority**
@@ -45,18 +46,19 @@ Open http://localhost:3000 — you'll be redirected to `/fr/login`.
 | `npm run build`       | Production build                             |
 | `npm start`           | Serve the production build                   |
 | `npm run lint`        | Run ESLint                                   |
-| `npm run db:migrate`  | Apply Prisma migrations to `dev.db`          |
+| `npm run db:migrate`  | Apply SQL migrations to `dev.db`             |
 | `npm run db:seed`     | Seed the database with dev data              |
-| `npm run db:studio`   | Open Prisma Studio (DB browser)              |
-| `npm run db:reset`    | Drop + recreate + migrate + seed (DEV ONLY)  |
+| `npm run db:reset`    | Delete `dev.db` + migrate + seed (DEV ONLY)  |
 
 ## Project layout
 
 ```
-prisma/
-  schema.prisma        # data model
+db/
+  types.ts             # Kysely Database interface + column types
+  migrate.ts           # forward-only migration runner
   seed.ts              # idempotent dev seed
   migrations/
+    0001_init.sql      # full schema
 src/
   app/
     [locale]/
@@ -75,7 +77,7 @@ src/
   i18n/                # next-intl routing + navigation
   lib/
     auth.ts            # NextAuth config + requireSession / requireDirector
-    db.ts              # Prisma singleton
+    db.ts              # Kysely client + toInt/toBool/nowIso helpers
     money.ts           # parseMoney / formatMoneyMinor / formatCurrency (minor units)
     time.ts            # HH:MM <-> minutes, rangesOverlap, DAY_KEYS
     audit.ts           # recordAudit helper -> AuditLog

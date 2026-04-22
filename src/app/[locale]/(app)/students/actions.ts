@@ -1,10 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db, isUniqueConstraintError, nowIso, toBool, toInt } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { redirectLocalized } from "@/lib/action-helpers";
 
@@ -43,9 +43,12 @@ export async function createStudent(
   if (!parsed.success) {
     return { error: "validation" };
   }
+  const id = randomUUID();
   try {
-    const created = await prisma.student.create({
-      data: {
+    await db
+      .insertInto("Student")
+      .values({
+        id,
         code: parsed.data.code,
         firstName: parsed.data.firstName,
         lastName: parsed.data.lastName,
@@ -53,22 +56,25 @@ export async function createStudent(
         guardianName: parsed.data.guardianName,
         guardianPhone: parsed.data.guardianPhone,
         notes: parsed.data.notes,
-        active: parsed.data.active ?? true,
-      },
-    });
-    await recordAudit({
-      actorId: session.user.id,
-      action: "student.create",
-      entity: "Student",
-      entityId: created.id,
-      payload: { after: created },
-    });
+        active: toInt(parsed.data.active ?? true),
+      })
+      .execute();
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "duplicate" };
-    }
+    if (isUniqueConstraintError(e)) return { error: "duplicate" };
     throw e;
   }
+  const created = await db
+    .selectFrom("Student")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
+  await recordAudit({
+    actorId: session.user.id,
+    action: "student.create",
+    entity: "Student",
+    entityId: id,
+    payload: { after: created },
+  });
   revalidatePath("/students");
   return redirectLocalized("/students");
 }
@@ -81,12 +87,16 @@ export async function updateStudent(
   const session = await requireSession();
   const parsed = studentSchema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
+  const before = await db
+    .selectFrom("Student")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
+  if (!before) return { error: "notfound" };
   try {
-    const before = await prisma.student.findUnique({ where: { id } });
-    if (!before) return { error: "notfound" };
-    const updated = await prisma.student.update({
-      where: { id },
-      data: {
+    await db
+      .updateTable("Student")
+      .set({
         code: parsed.data.code,
         firstName: parsed.data.firstName,
         lastName: parsed.data.lastName,
@@ -94,22 +104,27 @@ export async function updateStudent(
         guardianName: parsed.data.guardianName,
         guardianPhone: parsed.data.guardianPhone,
         notes: parsed.data.notes,
-        active: parsed.data.active ?? before.active,
-      },
-    });
-    await recordAudit({
-      actorId: session.user.id,
-      action: "student.update",
-      entity: "Student",
-      entityId: id,
-      payload: { before, after: updated },
-    });
+        active: toInt(parsed.data.active ?? toBool(before.active)),
+        updatedAt: nowIso(),
+      })
+      .where("id", "=", id)
+      .execute();
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "duplicate" };
-    }
+    if (isUniqueConstraintError(e)) return { error: "duplicate" };
     throw e;
   }
+  const updated = await db
+    .selectFrom("Student")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
+  await recordAudit({
+    actorId: session.user.id,
+    action: "student.update",
+    entity: "Student",
+    entityId: id,
+    payload: { before, after: updated },
+  });
   revalidatePath("/students");
   revalidatePath(`/students/${id}`);
   return redirectLocalized(`/students/${id}`);
@@ -117,12 +132,20 @@ export async function updateStudent(
 
 export async function deleteStudent(id: string): Promise<void> {
   const session = await requireSession();
-  const before = await prisma.student.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Student")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return;
   // Soft-delete semantics: deactivate rather than hard-delete to preserve
   // ledger / audit references. Phase 1 has no ledger entries yet, but we
   // keep the same semantics for consistency.
-  await prisma.student.update({ where: { id }, data: { active: false } });
+  await db
+    .updateTable("Student")
+    .set({ active: 0, updatedAt: nowIso() })
+    .where("id", "=", id)
+    .execute();
   await recordAudit({
     actorId: session.user.id,
     action: "student.deactivate",

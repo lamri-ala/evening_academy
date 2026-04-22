@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Pencil } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,11 @@ export default async function TeacherProfilePage({
   const t = await getTranslations({ locale, namespace: "teachers" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const teacher = await prisma.teacher.findUnique({ where: { id } });
+  const teacher = await db
+    .selectFrom("Teacher")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!teacher) notFound();
 
   const moneyLocale = locale === "ar" ? "ar-DZ" : "fr-DZ";
@@ -29,7 +33,7 @@ export default async function TeacherProfilePage({
     [t("email"), teacher.email ?? "—"],
     [t("sessionRate"), formatCurrency(teacher.sessionRate, moneyLocale)],
     [t("notes"), teacher.notes ?? "—"],
-    [tCommon("active"), teacher.active ? tCommon("yes") : tCommon("no")],
+    [tCommon("active"), toBool(teacher.active) ? tCommon("yes") : tCommon("no")],
   ];
 
   return (

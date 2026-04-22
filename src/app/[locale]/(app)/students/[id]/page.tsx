@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Pencil } from "lucide-react";
-import { prisma } from "@/lib/db";
+import { db, toBool } from "@/lib/db";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,11 @@ export default async function StudentProfilePage({
   const t = await getTranslations({ locale, namespace: "students" });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
-  const student = await prisma.student.findUnique({ where: { id } });
+  const student = await db
+    .selectFrom("Student")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!student) notFound();
 
   const rows: Array<[string, React.ReactNode]> = [
@@ -30,7 +34,7 @@ export default async function StudentProfilePage({
     [t("guardianPhone"), student.guardianPhone ?? "—"],
     [t("notes"), student.notes ?? "—"],
     [t("balance"), formatCurrency(student.cachedBalance, locale === "ar" ? "ar-DZ" : "fr-DZ")],
-    [tCommon("active"), student.active ? tCommon("yes") : tCommon("no")],
+    [tCommon("active"), toBool(student.active) ? tCommon("yes") : tCommon("no")],
   ];
 
   return (

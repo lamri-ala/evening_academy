@@ -1,10 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 import { requireSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { db, isUniqueConstraintError, nowIso, toBool, toInt } from "@/lib/db";
 import { recordAudit } from "@/lib/audit";
 import { redirectLocalized } from "@/lib/action-helpers";
 import { parseMoney } from "@/lib/money";
@@ -52,30 +52,36 @@ export async function createSubject(
   const session = await requireSession();
   const parsed = schema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
+  const id = randomUUID();
   try {
-    const created = await prisma.subject.create({
-      data: {
+    await db
+      .insertInto("Subject")
+      .values({
+        id,
         name: parsed.data.name,
         code: parsed.data.code,
         sessionPrice: parsed.data.sessionPrice,
         defaultTeacherRate: parsed.data.defaultTeacherRate,
         color: parsed.data.color,
-        active: parsed.data.active ?? true,
-      },
-    });
-    await recordAudit({
-      actorId: session.user.id,
-      action: "subject.create",
-      entity: "Subject",
-      entityId: created.id,
-      payload: { after: created },
-    });
+        active: toInt(parsed.data.active ?? true),
+      })
+      .execute();
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "duplicate" };
-    }
+    if (isUniqueConstraintError(e)) return { error: "duplicate" };
     throw e;
   }
+  const created = await db
+    .selectFrom("Subject")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
+  await recordAudit({
+    actorId: session.user.id,
+    action: "subject.create",
+    entity: "Subject",
+    entityId: id,
+    payload: { after: created },
+  });
   revalidatePath("/subjects");
   return redirectLocalized("/subjects");
 }
@@ -88,33 +94,42 @@ export async function updateSubject(
   const session = await requireSession();
   const parsed = schema.safeParse(extract(formData));
   if (!parsed.success) return { error: "validation" };
-  const before = await prisma.subject.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Subject")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return { error: "notfound" };
   try {
-    const updated = await prisma.subject.update({
-      where: { id },
-      data: {
+    await db
+      .updateTable("Subject")
+      .set({
         name: parsed.data.name,
         code: parsed.data.code,
         sessionPrice: parsed.data.sessionPrice,
         defaultTeacherRate: parsed.data.defaultTeacherRate,
         color: parsed.data.color,
-        active: parsed.data.active ?? before.active,
-      },
-    });
-    await recordAudit({
-      actorId: session.user.id,
-      action: "subject.update",
-      entity: "Subject",
-      entityId: id,
-      payload: { before, after: updated },
-    });
+        active: toInt(parsed.data.active ?? toBool(before.active)),
+        updatedAt: nowIso(),
+      })
+      .where("id", "=", id)
+      .execute();
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      return { error: "duplicate" };
-    }
+    if (isUniqueConstraintError(e)) return { error: "duplicate" };
     throw e;
   }
+  const updated = await db
+    .selectFrom("Subject")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirstOrThrow();
+  await recordAudit({
+    actorId: session.user.id,
+    action: "subject.update",
+    entity: "Subject",
+    entityId: id,
+    payload: { before, after: updated },
+  });
   revalidatePath("/subjects");
   revalidatePath(`/subjects/${id}`);
   return redirectLocalized(`/subjects/${id}`);
@@ -122,9 +137,17 @@ export async function updateSubject(
 
 export async function deleteSubject(id: string): Promise<void> {
   const session = await requireSession();
-  const before = await prisma.subject.findUnique({ where: { id } });
+  const before = await db
+    .selectFrom("Subject")
+    .selectAll()
+    .where("id", "=", id)
+    .executeTakeFirst();
   if (!before) return;
-  await prisma.subject.update({ where: { id }, data: { active: false } });
+  await db
+    .updateTable("Subject")
+    .set({ active: 0, updatedAt: nowIso() })
+    .where("id", "=", id)
+    .execute();
   await recordAudit({
     actorId: session.user.id,
     action: "subject.deactivate",
